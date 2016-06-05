@@ -1,0 +1,399 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title></title>
+<meta name="" content="">
+<!--
+	Group members:
+		Satoshi Iwao - StudentID: 300215659
+		Thanh Phuong Mai - StudentID: 300142190
+-->
+<link rel="stylesheet" type="text/css" href="ConnectStyle.css">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script src="Connect4Class.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+<script>
+
+	var begin;
+	//var begin1;
+	//var begin2;
+	var p0CurrentTime = 0;
+	var p1CurrentTime = 0;
+	var animationCheck = 1; // 0 : animation on , 1 : animation off
+	var gameDoneCheck = 0; // 0 : not done , 1 : done;
+	
+	var centerx = (screen.availWidth/2.0)-50;
+   	var centery = screen.availHeight/2.0;
+	
+	
+	var coin = ["<img class='coin' id='red' src='src/RedCoin.png'/>","<img class='coin' id='yellow' src='src/YellowCoin.png'/>"];
+	var turn = 0; // me : 0, you : 1
+
+	var Mygame = new ConnectClass();
+
+	function fallBall(column) {
+		
+		if ((document.getElementById("p0").value != "")&&(document.getElementById("p1")!="")) {
+			$(document).ready(function() {
+	
+				for (var i = 6;i>=0;i--) {
+				
+					if (Mygame.GetStatus(i, column)==-1) {
+					
+						if (animationCheck == 0) {
+							
+							var tempCoin = coin[turn];
+							
+							var StartPosition = document.getElementById("top"+column).getBoundingClientRect();
+							var EndPosition = document.getElementById(""+i+column).getBoundingClientRect();
+					
+			   	   			$("#myd").after("<p class='circle' id='ball'>"+coin[turn]+"</p>");
+			   	   			$('#ball').css({"position": 'absolute' , 'left': StartPosition.left+5.5 , 'top': StartPosition.top});
+			   	   			$("#ball").animate({top: (EndPosition.bottom+43.0 - StartPosition.top)}, 1000, "easeOutBounce" , function() {
+			   	   				$("#ball").remove();
+			   	   				
+			   	   				document.getElementById(""+i+column).innerHTML = tempCoin;
+			   	   	
+			   	   				Mygame.ChangeStatus(""+i+column, turn);
+						
+								Mygame.Check(i, column, turn);
+								
+								turn ^= 1;
+																
+								clearInterval(begin);
+								
+								if (gameDoneCheck==0) {
+									ChangeClockTurn(turn);
+									TurnDescription();					
+								}
+								
+			   	   			});	
+						}else if (animationCheck == 1) {
+							document.getElementById(""+i+column).innerHTML = coin[turn];
+			   	   	
+			   	   			Mygame.ChangeStatus(""+i+column, turn);
+			   	   			
+							Mygame.Check(i, column, turn);
+							
+							turn ^= 1;
+							
+							clearInterval(begin);
+							
+							if (gameDoneCheck==0) {
+								ChangeClockTurn(turn);
+								TurnDescription();					
+							}							
+						}
+						break;	
+					}else {};
+				}
+			});	
+		}
+		else {
+			window.alert("please input player 1 and player 2 name!!");
+		}
+		
+	}
+
+	$(document).ready(function() {
+		
+		$("#clear").click(function() {
+			$(".cell").html("");
+			
+			Mygame = new ConnectClass();
+			p0CurrentTime = 0;
+			p1CurrentTime = 0;
+			$(".resultCircle").remove();
+			document.getElementById("p0").value = "";
+			document.getElementById("p1").value = "";
+			document.getElementById("time0").value = "";
+			document.getElementById("time1").value = "";
+			document.getElementById("des0").value = "";
+			document.getElementById("des1").value = "";
+			gameDoneCheck = 0;
+			turn = 0;
+			clearInterval(begin);
+			//clearInterval(begin1);
+			//clearInterval(begin2);
+		});
+		
+		$("#aniOn").click(function() {
+			animationCheck = 0;
+		})
+		
+		$("#aniOff").click(function() {
+			animationCheck = 1;
+		})
+		
+	})
+	
+	function ChangeClockTurn(myturn) {
+		
+		if (myturn==0) {
+			begin = setInterval(Timer0, 1000);
+		}
+		else if (myturn==1) {
+			begin = setInterval(Timer1, 1000);
+		}
+	}
+	
+	function Timer0() {
+				
+		p0CurrentTime++;
+		
+		var hour =parseInt(p0CurrentTime/3600);
+		var min = parseInt((p0CurrentTime%3600)/60);		
+		var sec = parseInt(((p0CurrentTime%3600)%60));
+		document.getElementById("time0").value = hour+":"+min+":"+sec;
+	}
+	
+	function Timer1() {
+				
+		p1CurrentTime++;
+		
+		var hour =parseInt(p1CurrentTime/3600);
+		var min = parseInt((p1CurrentTime%3600)/60);		
+		var sec = parseInt(((p1CurrentTime%3600)%60));
+
+		document.getElementById("time1").value = hour+":"+min+":"+sec;
+	}
+	
+	function resultMessage(winner) {
+		
+		var pName = winner;
+   		var degree = Math.PI/(pName.length-1);
+   		var radius = 250.00; 		
+		var ind = 0;
+   		
+		var begin1 = setInterval(function() {
+
+			if (ind >= pName.length) {
+				clearInterval(begin1);
+				resultMessage2();
+			}else {
+				$("#myd").after("<p class='resultCircle' id='ball"+ind+"'>"+pName.substring(ind,ind+1)+"</p>");
+				$('#ball'+ind).css({"text-align": "center" ,"height": "100px", "width": "100px", "background-image":"url('src/greenCoin.png')", "background-size": "100% 100%"});
+   	   			$('#ball'+ind).css({"position": 'absolute' , 'left': parseFloat(centerx+(radius*Math.cos(Math.PI-(ind*degree))))+'px', 'top': '0px'});
+   	   			$("#ball"+ind).animate({top: parseFloat(centery-(radius*Math.sin(Math.PI-(ind*degree))))+'px'}, 2000 ,"easeOutBounce");
+   	   		
+   	   			ind++;	
+			}
+   		}, 500);
+ 
+	}
+	
+	function resultMessage2() {
+			
+		var ind = 0;
+	 	var radius = 150.00;
+		var resultMessage = "wins!";
+		var degree = Math.PI/(resultMessage.length-1);
+		
+		var begin2 = setInterval(function() {
+			
+			if (ind >= resultMessage.length) {
+				clearInterval(begin2);
+			}else {
+				$("#myd").after("<p class='resultCircle' id='ball"+ind+"'>"+resultMessage.substring(ind,ind+1)+"</p>");
+				$('#ball'+ind).css({"text-align": "center" ,"height": "100px", "width": "100px", "background-image":"url('src/RedCoin.png')", "background-size": "100% 100%"});
+				$('#ball'+ind).css({"position": 'absolute' , 'left': parseFloat(centerx+(radius*Math.cos(Math.PI-(ind*degree))))+'px', 'top': '0px'});
+				$("#ball"+ind).animate({top: parseFloat(centery-(radius*Math.sin(Math.PI-(ind*degree))))+'px'}, 2000 ,"easeOutBounce");
+				ind++;	
+			}
+		}, 500);		
+	} 
+	
+</script>
+</head>
+<body onload="callDataBase();">
+<div id="myd"></div>
+<h1 id="header">Welcome to Connect 4!</h1>
+<div id="player1">
+	Player 1 : <input class="baseBtn boneBtn" type="text" id="p0"/><br />
+	Time : <input class="baseBtn boneBtn" type="text" id="time0"/><br />
+	Turn : <input class="baseBtn boneBtn" type="text" id="des0"/><br />
+	Coin : <img class="modelCoin" id="modelRed" src="src/RedCoin.png"/>	
+	
+</div>
+<div id="player2">
+	Player 2 : <input class="baseBtn boneBtn" type="text" id="p1"/><br />
+	Time : <input class="baseBtn boneBtn" type="text" id="time1"/><br />
+	Turn : <input class="baseBtn boneBtn" type="text" id="des1"/><br />
+	Coin : <img class="modelCoin" id="modelYellow" src="src/YellowCoin.png"/>
+</div>
+
+<table align="center">
+	<tr id="topRow">
+		<td class="top" id="top0" onclick="fallBall('0')"></td>
+		<td class="top" id="top1" onclick="fallBall('1')"></td>
+		<td class="top" id="top2" onclick="fallBall('2')"></td>
+		<td class="top" id="top3" onclick="fallBall('3')"></td>
+		<td class="top" id="top4" onclick="fallBall('4')"></td>
+		<td class="top" id="top5" onclick="fallBall('5')"></td>
+		<td class="top" id="top6" onclick="fallBall('6')"></td>
+	</tr>
+</table>
+
+<table align="center" id="board">
+	<tr>
+		<td class="cell" id="00" ></td>
+		<td class="cell" id="01" ></td>
+		<td class="cell" id="02" ></td>
+		<td class="cell" id="03" ></td>
+		<td class="cell" id="04" ></td>
+		<td class="cell" id="05" ></td>
+		<td class="cell" id="06" ></td>
+	</tr>
+	<tr>
+		<td class="cell" id="10" ></td>
+		<td class="cell" id="11" ></td>
+		<td class="cell" id="12" ></td>
+		<td class="cell" id="13" ></td>
+		<td class="cell" id="14" ></td>
+		<td class="cell" id="15" ></td>
+		<td class="cell" id="16" ></td>
+	</tr>
+	<tr>
+		<td class="cell" id="20"></td>
+		<td class="cell" id="21"></td>
+		<td class="cell" id="22"></td>
+		<td class="cell" id="23"></td>
+		<td class="cell" id="24"></td>
+		<td class="cell" id="25"></td>
+		<td class="cell" id="26"></td>
+	</tr>
+	<tr>
+		<td class="cell" id="30"></td>
+		<td class="cell" id="31"></td>
+		<td class="cell" id="32"></td>
+		<td class="cell" id="33"></td>
+		<td class="cell" id="34"></td>
+		<td class="cell" id="35"></td>
+		<td class="cell" id="36"></td>
+	</tr>
+	<tr>
+		<td class="cell" id="40"></td>
+		<td class="cell" id="41"></td>
+		<td class="cell" id="42"></td>
+		<td class="cell" id="43"></td>
+		<td class="cell" id="44"></td>
+		<td class="cell" id="45"></td>
+		<td class="cell" id="46"></td>
+	</tr>
+	<tr>
+		<td class="cell" id="50"></td>
+		<td class="cell" id="51"></td>
+		<td class="cell" id="52"></td>
+		<td class="cell" id="53"></td>
+		<td class="cell" id="54"></td>
+		<td class="cell" id="55"></td>
+		<td class="cell" id="56"></td>
+	</tr>
+	<tr>
+		<td class="cell" id="60"></td>
+		<td class="cell" id="61"></td>
+		<td class="cell" id="62"></td>
+		<td class="cell" id="63"></td>
+		<td class="cell" id="64"></td>
+		<td class="cell" id="65"></td>
+		<td class="cell" id="66"></td>
+	</tr>
+</table>
+<div id="below">
+	Command : <input class="baseBtn boneBtn" id="clear"  type="button" value="clear"/>
+	<input class="baseBtn boneBtn" type="button" value="start" onclick="if ((document.getElementById('p0').value != '')&&(document.getElementById('p1')!='')) {begin = setInterval(Timer0, 1000);TurnDescription();}else {window.alert('please input player 1 and player 2 name!!');} "/><br />
+	Animation : <input class="baseBtn boneBtn" id="aniOn" type="button" value="ON"/><input class="baseBtn boneBtn" id="aniOff" type="button" value="OFF"/><br />
+	Top 3 Records : <table class="boneBtn baseBtn" align="center">
+	<tr class="db">
+		<th>Name</th>
+		<th>Time</th>
+		<th>Date</th>
+	</tr>
+	<tr class="db">
+		<td id="namedata0"></td>
+		<td id="timedata0"></td>
+		<td id="datedata0"></td>
+	</tr>
+	<tr class="db">
+		<td id="namedata1"></td>
+		<td id="timedata1"></td>
+		<td id="datedata1"></td>
+	</tr>
+	<tr class="db">
+		<td id="namedata2"></td>
+		<td id="timedata2"></td>
+		<td id="datedata2"></td>
+	</tr>
+</table>
+</div>
+
+
+<textarea id="txt" style="visibility: hidden" ></textarea>
+<script>
+
+	function TurnDescription() {
+		
+		if (turn==0){
+			document.getElementById("des0").value = "Your Turn!";
+			document.getElementById("des1").value = "Wait for your turn!";
+		}
+		else if (turn==1) {
+			document.getElementById("des0").value = "Wait for your turn!";
+			document.getElementById("des1").value = "Your Turn!";
+		}
+	}
+	// connection check http request 
+	function checkConnection() {
+				
+		var httpRequest = false;
+				
+		try {
+			httpRequest = new XMLHttpRequest();
+		}catch (requestError) {
+			try {
+				httpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+			}catch (requestError) {
+				try {
+					httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+				}catch (requestError) {
+					window.alert("Your browser does not support AJAX!");
+					return false;
+				}
+			}
+		}
+		return httpRequest;
+	}
+
+	// send request to php and get response from php
+	function callDataBase() {
+		var httpRequest = checkConnection();
+
+		httpRequest.onreadystatechange= function() {
+			if (httpRequest.readyState==4&& httpRequest.status == 200) {
+				var responseArray = httpRequest.responseText.split(",");
+				
+				for (var i = 0;i<responseArray.length;i++) {
+					
+					var row = responseArray[i].split("&");
+					
+					if (row != undefined) {
+						document.getElementById("namedata"+i).innerHTML = row[0];
+						document.getElementById("timedata"+i).innerHTML = row[1];
+						document.getElementById("datedata"+i).innerHTML = row[2];	
+					}
+				}
+			}
+		}
+
+		var requestBody = ""; 
+
+		httpRequest.open("POST","DatabaseData.php", true);
+		httpRequest.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+		httpRequest.setRequestHeader("Content-Length", requestBody.length);
+		httpRequest.setRequestHeader("Connection", "close");
+		httpRequest.send(requestBody);		
+	}
+	
+</script>
+</body>
+</html>
